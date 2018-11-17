@@ -15,9 +15,9 @@
 FILE *fp;
 
 /**
- * 4 bit unknown
  * 8 bit unknown
- * 12 bit temperature
+ * 4 bit 0000 = positive temp, 1111 = negative temp
+ * 8 bit temperature
  * 4 bit unknown, always 1111
  * 8 bit humidity
 */
@@ -49,9 +49,13 @@ void parse(char *buf)
   }
 
   unsigned int humidity = ((uint64_t)value & 0xFF);
-  float temp = (((uint64_t)value >> 12) & 0xFFF);
-  printf("time: %d temp: %2.1f humid: %d\n", (int)time(NULL), temp / 10, humidity);
-  fprintf(fp, "time: %d temp: %2.1f humid: %d\n", (int)time(NULL), temp / 10, humidity);
+  unsigned char negative = (((uint64_t)value >> 20) & 0x0F);
+  short temp = (((uint64_t)value >> 12) & 0xFFF);
+  if (negative == 0xf) {
+    temp = 0xf000 + temp;
+  }
+  printf("time: %d temp: %2.1f humid: %d stream: %s\n", (int)time(NULL), (float) temp / 10, humidity, buf);
+  fprintf(fp, "time: %d temp: %2.1f humid: %d\n", (int)time(NULL), (float) temp / 10, humidity);
   fflush(fp);
 }
 
@@ -160,11 +164,9 @@ int main(int argc, char *argv[]) {
           buf[i - p]=buf[i];
         }
         buf_p = buf_p - p;
-        printf("buffer remain: %d\n", buf_p);
       } else {
         memset(&buf, '\0', sizeof buf);
         buf_p = 0;
-        printf("buffer empty\n");
       }
     } else {
 	     printf("Error %d from read: %s!\n", errno, strerror(errno));
