@@ -29,11 +29,9 @@ lastreading last;
  * 4 bit unknown, always 1111
  * 8 bit humidity
 */
-void parse(char *buf)
+void parse(char *buf, int l)
 {
   uint64_t value = 0;
-
-  int l = strlen(buf);
 
   // ideal is 36
   if (l < 34 || l > 38) {
@@ -106,7 +104,7 @@ int process_buffer(char *buffer, int length)
   {
     *p2 = '\0';
     strncpy(buf, p1, p2 - p1 - 1); // skip LF
-    parse(buf);
+    parse(buf, p2 - p1 - 1);
     processed += (p2 - p1) + 1;
     p1 = ++p2;
   }
