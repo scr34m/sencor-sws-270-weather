@@ -14,6 +14,14 @@
 
 FILE *fp;
 
+typedef struct {
+    unsigned int humidity;
+    short temp;
+    int ts;
+} lastreading;
+
+lastreading last;  
+
 /**
  * 8 bit unknown
  * 4 bit 0000 = positive temp, 1111 = negative temp
@@ -40,13 +48,22 @@ void parse(char *buf)
       value += 1;
     } else if(buf[i] == '0') {
       value = value << 1;
-    } else if(buf[i] == '\n' || buf[i] == '\r') {
-      // CR \ LF
     } else {
       printf("error: %d %s\n", l, buf);
       return;
     }
   }
+
+  int ts = (int)time(NULL);
+
+  time_t timer;
+  char time_s[26];
+  struct tm* tm_info;
+
+  time(&timer);
+  tm_info = localtime(&timer);
+
+  strftime(time_s, 26, "%Y-%m-%d %H:%M:%S", tm_info);
 
   unsigned int humidity = ((uint64_t)value & 0xFF);
   unsigned char negative = (((uint64_t)value >> 20) & 0x0F);
@@ -54,8 +71,27 @@ void parse(char *buf)
   if (negative == 0xf) {
     temp = 0xf000 + temp;
   }
-  printf("time: %d temp: %2.1f humid: %d stream: %s\n", (int)time(NULL), (float) temp / 10, humidity, buf);
-  fprintf(fp, "time: %d temp: %2.1f humid: %d\n", (int)time(NULL), (float) temp / 10, humidity);
+
+  printf("time: %s temp: %2.1f humid: %d stream: %s", time_s, (float) temp / 10, humidity, buf);
+
+  // wrong readings!?
+  if (humidity < 20) {
+    printf(" -- WRONG HUMIDITY\n");
+    return;
+  }
+
+  if (ts - last.ts <= 1 && last.temp == temp && last.humidity == humidity) {
+    printf(" -- REPEAT\n");
+    return;
+  }
+
+  printf(" -- OK\n");
+
+  last.ts = ts;
+  last.temp = temp;
+  last.humidity = humidity;
+
+  fprintf(fp, "time: %d temp: %2.1f humid: %d\n", ts, (float) temp / 10, humidity);
   fflush(fp);
 }
 
@@ -69,10 +105,10 @@ int process_buffer(char *buffer, int length)
   while( (p2 = strchr(p1,'\n')) != NULL )
   {
     *p2 = '\0';
-    strcpy(buf, p1);
+    strncpy(buf, p1, p2 - p1 - 1); // skip LF
     parse(buf);
+    processed += (p2 - p1) + 1;
     p1 = ++p2;
-    processed += strlen(buf) + 1;
   }
 
   return processed;
