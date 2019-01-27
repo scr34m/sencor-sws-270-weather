@@ -75,7 +75,7 @@ void parse(char *buf)
   printf("time: %s temp: %2.1f humid: %d stream: %s", time_s, (float) temp / 10, humidity, buf);
 
   // wrong readings!?
-  if (humidity < 20) {
+  if (humidity < 20 || humidity > 100) {
     printf(" -- WRONG HUMIDITY\n");
     return;
   }
