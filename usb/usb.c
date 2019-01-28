@@ -23,8 +23,8 @@ typedef struct {
 lastreading last;  
 
 /**
- * 4 bit unknown
- * 8 bit unknown
+ * 4 bit unknown = 0110
+ * 8 bit unknown = 00011000
  * 4 bit 0000 = positive temp, 1111 = negative temp
  * 8 bit temperature
  * 4 bit unknown, always 1111
@@ -51,6 +51,12 @@ void parse(char *buf, int l)
       printf("error: %d %s\n", l, buf);
       return;
     }
+  }
+
+  // id check
+  if ((((uint64_t)value >> 32) & 0x0F) != 0x06) {
+    printf("error: %d %s\n", l, buf);
+    return;
   }
 
   int ts = (int)time(NULL);
