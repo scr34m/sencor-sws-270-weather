@@ -23,6 +23,7 @@ typedef struct {
 lastreading last;  
 
 /**
+ * 4 bit unknown
  * 8 bit unknown
  * 4 bit 0000 = positive temp, 1111 = negative temp
  * 8 bit temperature
@@ -34,7 +35,7 @@ void parse(char *buf, int l)
   uint64_t value = 0;
 
   // ideal is 36
-  if (l < 34 || l > 38) {
+  if (l != 36) {
       printf("error: %d %s\n", l, buf);
       return;
   }
@@ -70,7 +71,7 @@ void parse(char *buf, int l)
     temp = 0xf000 + temp;
   }
 
-  printf("time: %s temp: %2.1f humid: %d stream: %s", time_s, (float) temp / 10, humidity, buf);
+  printf("%s %2.1fC %d%% - %s", time_s, (float) temp / 10, humidity, buf);
 
   // wrong readings!?
   if (humidity < 20 || humidity > 100) {
