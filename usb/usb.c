@@ -34,12 +34,6 @@ void parse(char *buf, int l)
 {
   uint64_t value = 0;
 
-  // ideal is 36
-  if (l != 36) {
-      printf("error: %d %s\n", l, buf);
-      return;
-  }
-
   int i = 0;
   for(i=0;i<l;i++) {
     if (buf[i] == '1') {
@@ -103,17 +97,26 @@ void parse(char *buf, int l)
 int process_buffer(char *buffer, int length)
 {
   char *p1, *p2;
-  int processed = 0;     
+  int processed = 0, l;
   char buf[256];
   
   p1 = buffer;
   while( (p2 = strchr(p1,'\n')) != NULL )
   {
     *p2 = '\0';
-    strncpy(buf, p1, p2 - p1 - 1); // skip LF
-    parse(buf, p2 - p1 - 1);
-    processed += (p2 - p1) + 1;
-    p1 = ++p2;
+
+    l = p2 - p1 - 1; // skip LF from length
+
+    // ideal is 36
+    if (l == 36) {
+      strncpy(buf, p1, l);
+      parse(buf, l);
+    } else {
+      printf("error: %d %s\n", l, p1);
+    }
+
+    processed += l + 2; // add back CR and LF to counter
+    p1 = ++p2; // go forward and skip LF position
   }
 
   return processed;
