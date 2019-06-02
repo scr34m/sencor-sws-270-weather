@@ -4,8 +4,9 @@ Sencor SWS 270 weather station sensor
 Used a RXB6 like 433 Mhz receiver to capture informations, USB folder contains a simple C code to read USB serial output.
 
 Packet specification:
-* 4 bit unknown
-* 8 bit unknown
+* 8 bit ID
+* 2 bit battery 10: OK, 01: AVG, 00: LOW
+* 2 bit channel 00: 1, 01: 2, 10: 3
 * 4 bit 0000 = positive temp, 1111 = negative temp
 * 8 bit temperature
 * 4 bit unknown, always 1111

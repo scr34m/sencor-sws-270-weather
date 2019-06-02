@@ -23,8 +23,9 @@ typedef struct {
 lastreading last;  
 
 /**
- * 4 bit unknown = 0110
- * 8 bit unknown = 00011000
+ * 8 bit id
+ * 2 bit battery
+ * 2 bit channel
  * 4 bit 0000 = positive temp, 1111 = negative temp
  * 8 bit temperature
  * 4 bit unknown, always 1111
@@ -47,11 +48,9 @@ void parse(char *buf, int l)
     }
   }
 
-  // id check
-  if ((((uint64_t)value >> 32) & 0x0F) != 0x06) {
-    printf("error: %d %s\n", l, buf);
-    return;
-  }
+  unsigned char id = (((uint64_t)value >> 28) & 0xFF);
+  unsigned char battery = (((uint64_t)value >> 26) & 0x03);
+  unsigned char channel = (((uint64_t)value >> 24) & 0x03);
 
   int ts = (int)time(NULL);
 
@@ -71,10 +70,10 @@ void parse(char *buf, int l)
     temp = 0xf000 + temp;
   }
 
-  printf("%s %2.1fC %d%% - %s", time_s, (float) temp / 10, humidity, buf);
+  printf("%s id:%d %dV %dCH %2.1fC %d%% - %s", time_s, id, battery, channel + 1, (float) temp / 10, humidity, buf);
 
   // wrong readings!?
-  if (humidity < 20 || humidity > 100) {
+  if (humidity < 0 || humidity > 100) {
     printf(" -- WRONG HUMIDITY\n");
     return;
   }
